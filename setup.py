@@ -8,7 +8,7 @@ setup(
     author = 'davidtnfsh',
     author_email = 'davidtnfsh@gmail.com',
     url = 'https://github.com/Stufinite/cphelper',
-    download_url = 'https://github.com/Stufinite/cphelperarchive/v1.1.tar.gz',
+    download_url = 'https://github.com/Stufinite/cphelper/archive/v1.1.tar.gz',
     keywords = ['coursepickinghelper', 'timetable', 'campass'],
     classifiers = [],
     license='GNU3.0',
