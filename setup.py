@@ -13,7 +13,7 @@ setup(
     classifiers = [],
     license='GNU3.0',
     install_requires=[
-        'djangoApiDec==1.2',
+        'djangoApiDec==v1.2',
         'pymongo==3.4.0',
     ],
     zip_safe=True
