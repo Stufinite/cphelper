@@ -13,6 +13,15 @@ class Command(BaseCommand):
 	CourseOfDept = db['CourseOfDept']
 	CourseOfTime = db['CourseOfTime']
 	genra = None
+	timeTable = {
+		'1':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'2':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'3':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'4':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'5':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'6':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'7':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)}
+	}
 	
 	def add_arguments(self, parser):
 		# Positional arguments
@@ -24,65 +33,58 @@ class Command(BaseCommand):
 		self.genra = json.load(open(options['genra'], 'r'))
 		course = json.load(open(options['course'], 'r'))
 		school = options['school']
-		self.BuildDeptTable(course, school)
+		self.main(course, school)
 
 		self.stdout.write(self.style.SUCCESS('crawl Job Json success!!!'))
 
-	def BuildDeptTable(self, jsonFile, school):
+	def main(self, jsonFile, school):
 		GenraTable = defaultdict(dict)
 		CourseOfDeptTable = defaultdict(dict)
 
 		for course in jsonFile:
-			if course['for_dept'] in self.genra['通識類']:
-				GenraTable['通識類'].setdefault(course['for_dept'], set()).add(course['grade'])
-			elif course['for_dept'] in self.genra['體育類']:
-				GenraTable['體育類'].setdefault(course['for_dept'], set()).add(course['grade'])
-			elif course['for_dept'] in self.genra['其他類']:
-				GenraTable['其他類'].setdefault(course['for_dept'], set()).add(course['grade'])
-			else:
-				GenraTable['大學部'].setdefault(course['for_dept'], set()).add(course['grade'])
+			self.forGenra(course, GenraTable)
+			self.forDept(course, CourseOfDeptTable)
+			self.forTime(course)
 
-			if course['obligatory_tf']:
-				CourseOfDeptTable[course['for_dept']].setdefault('obligatory', {}).setdefault(course['grade'], []).append(course['code'])
-			else:
-				CourseOfDeptTable[course['for_dept']].setdefault('optional', {}).setdefault(course['grade'], []).append(course['code'])
+		self.sortGenra(GenraTable)
+		self.Genra.update_one({'school':school},{'$set': {'school':school, 'Genra':GenraTable}}, upsert=True)
 
+		self.CourseOfDept.update_one({'school':school},{'$set': {'school':school, 'CourseOfDept':CourseOfDeptTable}}, upsert=True)
+		self.CourseOfDept.create_index([("school", pymongo.ASCENDING)])
+
+		self.set2tuple()
+		self.CourseOfTime.update_one({'school':school}, {'$set':{'school':school, 'CourseOfTime':self.timeTable}}, upsert=True)
+
+	def forGenra(self, course, GenraTable):
+		if course['for_dept'] in self.genra:
+			GenraTable[self.genra[course['for_dept']]].setdefault(course['for_dept'], set()).add(course['grade'])
+		else:
+			GenraTable['大學部'].setdefault(course['for_dept'], set()).add(course['grade'])
+
+	def forDept(self, course, CourseOfDeptTable):
+		if course['obligatory_tf']:
+			CourseOfDeptTable[course['for_dept']].setdefault('obligatory', {}).setdefault(course['grade'], []).append(course['code'])
+		else:
+			CourseOfDeptTable[course['for_dept']].setdefault('optional', {}).setdefault(course['grade'], []).append(course['code'])
+
+	@staticmethod
+	def sortGenra(GenraTable):
 		sortingOrder = '一二三四五六日ABCDEFGH'
 		for g in GenraTable:
 			for key, value in GenraTable[g].items():
 				GenraTable[g][key] = sorted(list(value), key=lambda x:sortingOrder.index(x[0]))
-		self.Genra.update_one({'school':school},{'$set': {'school':school, 'Genra':GenraTable}}, upsert=True)
-		self.CourseOfDept.update_one({'school':school},{'$set': {'school':school, 'CourseOfDept':CourseOfDeptTable}}, upsert=True)
 
-	def BuildByDept(self, jsonDict):
-		def getObliAttr(obligat):
-			if obligat:
-				return 'obligatory'
-			return 'optional'
+	def forTime(self, course):
+		for i in course['time']:
+			day = i['day']
+			for time in i['time']:
+				if course['for_dept'] in self.genra:
+					self.timeTable[str(day)][str(time)][self.genra[course['for_dept']]].add(course['code'])
+				else:
+					self.timeTable[str(day)][str(time)][course['for_dept']].add(course['code'])
 
-		for i in jsonDict:
-
-			result.setdefault(dept, 
-				{
-					'obligatory':{},
-					'optional':{}
-				}
-			)
-
-			result[dept][oblAttr].setdefault(grade, []).append(code)
-
-		self.CourseOfDept.remove({})
-		
-		self.CourseOfDept.insert(resultList)
-		self.CourseOfTime.create_index([("school", pymongo.ASCENDING),("dept", pymongo.ASCENDING)])
-
-	def BuildByTime(self, jsonDict):
-		result = {
-			1:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{}},
-			2:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{}},
-			3:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{}},
-			4:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{}},
-			5:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{}},
-			6:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{}},
-			7:{1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{}}
-		}
+	def set2tuple(self):
+		for day in self.timeTable:
+			for time in self.timeTable[day]:
+				for codeList in self.timeTable[day][time]:
+					self.timeTable[day][time][codeList] = tuple(self.timeTable[day][time][codeList])
