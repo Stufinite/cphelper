@@ -14,13 +14,13 @@ class Command(BaseCommand):
 	CourseOfTime = db['CourseOfTime']
 	CourseSearch = db['CourseSearch']
 	timeTable = {
-		'1':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
-		'2':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
-		'3':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
-		'4':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
-		'5':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
-		'6':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
-		'7':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)}
+		'1':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'2':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'3':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'4':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'5':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'6':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
+		'7':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)}
 	}
 	genra = None
 	semester = None
@@ -91,7 +91,7 @@ class Command(BaseCommand):
 
 	@staticmethod
 	def sortGenra(GenraTable):
-		sortingOrder = '一二三四五六日ABCDEFGH'
+		sortingOrder = '01234567一二三四五六日ABCDEFGH'
 		for g in GenraTable:
 			for key, value in GenraTable[g].items():
 				GenraTable[g][key] = sorted(list(value), key=lambda x:sortingOrder.index(x[0]))
@@ -100,11 +100,14 @@ class Command(BaseCommand):
 		for i in course['time']:
 			day = i['day']
 			for time in i['time']:
-				if course['for_dept'] in self.genra:
-					self.timeTable[str(day)][str(time)][self.genra[course['for_dept']]].add(course['code'])
-				else:
-					self.timeTable[str(day)][str(time)][course['for_dept']].add(course['code'])
-
+				try:
+					if course['for_dept'] in self.genra:
+						self.timeTable[str(day)][str(time)][self.genra[course['for_dept']]].add(course['code'])
+					else:
+						self.timeTable[str(day)][str(time)][course['for_dept']].add(course['code'])
+				except Exception as e:
+					print(course)
+					raise e
 	def set2tuple(self):
 		for day in self.timeTable:
 			for time in self.timeTable[day]:
