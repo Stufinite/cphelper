@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from django.core.management.base import BaseCommand, CommandError
-import re, jieba, pyprind, pymongo, json
+import re, jieba, pyprind, pymongo, json, jieba
 from timetable.models import Course
 from collections import defaultdict
 
@@ -12,7 +12,7 @@ class Command(BaseCommand):
 	Genra = db['Genra']
 	CourseOfDept = db['CourseOfDept']
 	CourseOfTime = db['CourseOfTime']
-	genra = None
+	CourseSearch = db['CourseSearch']
 	timeTable = {
 		'1':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
 		'2':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
@@ -22,38 +22,60 @@ class Command(BaseCommand):
 		'6':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
 		'7':{'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)}
 	}
+	genra = None
+	semester = None
+	school = None
 	
 	def add_arguments(self, parser):
 		# Positional arguments
 		parser.add_argument('genra', type=str)
 		parser.add_argument('course', type=str)
 		parser.add_argument('school', type=str)
+		parser.add_argument('semester', type=str)
 
 	def handle(self, *args, **options):
 		self.genra = json.load(open(options['genra'], 'r'))
+		self.school = options['school']
+		self.semester = options['semester']
 		course = json.load(open(options['course'], 'r'))
-		school = options['school']
-		self.main(course, school)
+		self.main(course)
 
 		self.stdout.write(self.style.SUCCESS('crawl Job Json success!!!'))
 
-	def main(self, jsonFile, school):
+	def main(self, jsonFile):
 		GenraTable = defaultdict(dict)
 		CourseOfDeptTable = defaultdict(dict)
+		CourseSearchTable = defaultdict(set)
+		uniqueCodeSet = set()
+		CourseList = [] # waiting to insert into django DB.
 
-		for course in jsonFile:
+		for course in pyprind.prog_bar(jsonFile):
 			self.forGenra(course, GenraTable)
 			self.forDept(course, CourseOfDeptTable)
 			self.forTime(course)
 
-		self.sortGenra(GenraTable)
-		self.Genra.update_one({'school':school},{'$set': {'school':school, 'Genra':GenraTable}}, upsert=True)
+			if course['code'] not in uniqueCodeSet:
+				uniqueCodeSet.add(course['code'])				
+				CourseList.append(self.json2django(course))
+				self.BuildIndex(CourseSearchTable, course)
 
-		self.CourseOfDept.update_one({'school':school},{'$set': {'school':school, 'CourseOfDept':CourseOfDeptTable}}, upsert=True)
-		self.CourseOfDept.create_index([("school", pymongo.ASCENDING)])
+		self.CourseSearch.remove({'school':self.school})
+		self.CourseSearch.insert(tuple( {'key':key, 'school':self.school, 'value':list(value)} for key, value in CourseSearchTable.items() if key != '' and key!=None))
+		self.CourseSearch.create_index([("key", pymongo.ASCENDING), ("school", pymongo.ASCENDING)])
+
+		Course.objects.filter(school=self.school).delete()
+		Course.objects.bulk_create(CourseList)
+
+		self.sortGenra(GenraTable)
+		self.Genra.update_one({'school':self.school},{'$set': {'school':self.school, 'Genra':GenraTable}}, upsert=True)
+		self.Genra.create_index([("school", pymongo.HASHED)])
+
+		self.CourseOfDept.update_one({'school':self.school},{'$set': {'school':self.school, 'CourseOfDept':CourseOfDeptTable}}, upsert=True)
+		self.CourseOfDept.create_index([("school", pymongo.HASHED)])
 
 		self.set2tuple()
-		self.CourseOfTime.update_one({'school':school}, {'$set':{'school':school, 'CourseOfTime':self.timeTable}}, upsert=True)
+		self.CourseOfTime.update_one({'school':self.school}, {'$set':{'school':self.school, 'CourseOfTime':self.timeTable}}, upsert=True)
+		self.CourseOfTime.create_index([("school", pymongo.HASHED)])
 
 	def forGenra(self, course, GenraTable):
 		if course['for_dept'] in self.genra:
@@ -88,3 +110,53 @@ class Command(BaseCommand):
 			for time in self.timeTable[day]:
 				for codeList in self.timeTable[day][time]:
 					self.timeTable[day][time][codeList] = tuple(self.timeTable[day][time][codeList])
+
+	def json2django(self, course):
+		time = ''
+		for i in course['time']:
+			time += str(i['day']) + '-'
+			for j in i['time']:
+				time += str(j) + '-'
+			time = time[:-1]
+			time += ','
+
+		return ( 
+			Course(
+				school=self.school.upper(),
+				semester=self.semester,
+				code=course['code'],
+				credits=course['credits'],
+				title=course['title'],
+				department=course['department'],
+				professor=course['professor'],
+				time=time[:-1],
+				location=course['location'][0] if len(course['location']) else '',
+				obligatory=course['obligatory_tf'],
+				note=course['note'],
+				discipline=course['discipline']
+			)
+		)
+
+
+	@staticmethod
+	def bigram(title):
+		title = re.sub(r'\(.*\)', '', title.split(',')[0]).split()[0].strip()
+		bigram = (title, )
+		if len(title) > 2:
+			prefix = title[0]
+			for i in range(1, len(title)):
+				if title[i:].count(title[i]) == 1:
+					bigram += (prefix + title[i],)
+		return bigram
+
+	def BuildIndex(self, CourseSearchTable, course):
+		key = self.bigram(course['title'])
+		titleTerms = (i for i in jieba.cut(course['title']) if len(i)>=2)
+		CourseCode = course['code']
+
+		for k in key:
+			CourseSearchTable[k].add(CourseCode)
+		for t in titleTerms:
+			CourseSearchTable[t].add(CourseCode)
+		CourseSearchTable[course['professor']].add(CourseCode)
+		CourseSearchTable[CourseCode].add(CourseCode)
