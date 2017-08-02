@@ -103,6 +103,9 @@ These instructions will get you a copy of the project up and running on your loc
 
 1. 第一次的時候，需要先初始化資料庫：`python migrate`
 2. Execute : `python manage.py runserver`.
+3. 插入mongodb以及django資料庫的範例指令：
+    * `python manage.py buildCourse 學校genra.json 學校course.json 學校 第幾學年度`
+    * 以中山大學為範例：`python manage.py buildCourse ../NSYSUgenra.json ../NSYSU.json NSYSU 1061`
 
 ### Break down into end to end tests
 

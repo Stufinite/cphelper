@@ -5,7 +5,7 @@ setup(
     packages = ['cphelper'],
     package_dir={'cphelper':'cphelper'},
     package_data={'cphelper':['management/commands/*', 'migrations/*']},
-    version = '1.4',
+    version = '1.5',
     description = 'A API which will return Course of specific Dept. and also Course which you can enroll at that time.',
     author = 'davidtnfsh',
     author_email = 'davidtnfsh@gmail.com',

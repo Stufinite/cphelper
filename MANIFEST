@@ -8,3 +8,5 @@ cphelper/models.py
 cphelper/tests.py
 cphelper/urls.py
 cphelper/views.py
+cphelper/management/commands/buildCourse.py
+cphelper/migrations/__init__.py
