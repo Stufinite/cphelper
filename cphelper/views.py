@@ -30,6 +30,9 @@ class Course(object):
 				CourseDict += tmp[dept]
 		return CourseDict
 
+	def getGenra(self):
+		return self.Cursor2Dict(self.db['Genra'].find({"school" : self.school}, {'Genra':1, '_id':False}))['Genra']
+
 @queryString_required(['dept', 'school'])
 def CourseOfDept(request):
 	"""
@@ -51,3 +54,12 @@ def CourseOfTime(request):
 	dept = request.GET['dept'].split()
 	c = Course(school=school)
 	return JsonResponse(c.getByTime(day=day, time=time, deptArr=dept), safe=False)
+
+@queryString_required(['school'])
+def Genra(request):
+	"""
+		Generate dict of Dept and its grade.
+	"""
+	school = request.GET['school']
+	c = Course(school=school)
+	return JsonResponse(c.getGenra(), safe=False)
