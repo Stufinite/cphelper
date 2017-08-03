@@ -65,10 +65,10 @@ API使用方式（下面所寫的是api的URL pattern）<br>
 
 
 
-2. *`/course/TimeOfCourse/?day=<星期幾>&time=<第幾節課>&school=<學校名稱>&degree=<學制，可以是複數>&dept=<系所，可以是複數>`*  
+2. *`/course/CourseOfTime/?day=<星期幾>&time=<第幾節課>&school=<學校名稱>&degree=<學制，可以是複數>&dept=<系所，可以是複數>`*  
 查詢該時段有什麼課可以上：
 
-  - 範例 (Example)：`/course/TimeOfCourse/?day=1&time=1&school=NCHU&degree=O+U&dept=C00+U56`  
+  - 範例 (Example)：`/course/CourseOfTime/?day=1&time=1&school=NCHU&degree=O+U&dept=C00+U56`  
   代表同時查詢O（其他類別）的C00（全校共同）和U（學士班）的U56（資工系）該時段的課程  
   - *`degree`* 和 *`dept`* ：如果要使用複數的時候，請記得用 *`+`* 把參數隔開，然後是 *`degree`* 的第一個值對應到 *`dept`* 的第一個；以此類推。
   - result：
