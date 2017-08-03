@@ -6,7 +6,7 @@ from timetable.models import Course
 from collections import defaultdict
 
 class Command(BaseCommand):
-	help = 'Convenient Way to insert Intern of Yourator json into arrogant'
+	help = 'Convenient Way to insert Course json into Mongo and DB of Django'
 	client = pymongo.MongoClient(None)
 	db = client['timetable']
 	Genra = db['Genra']
@@ -22,19 +22,16 @@ class Command(BaseCommand):
 		'6':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)},
 		'7':{'0':defaultdict(set),'1':defaultdict(set),'2':defaultdict(set),'3':defaultdict(set),'4':defaultdict(set),'5':defaultdict(set),'6':defaultdict(set),'7':defaultdict(set),'8':defaultdict(set),'9':defaultdict(set),'10':defaultdict(set),'11':defaultdict(set),'12':defaultdict(set),'13':defaultdict(set)}
 	}
-	genra = None
 	semester = None
 	school = None
 	
 	def add_arguments(self, parser):
 		# Positional arguments
-		parser.add_argument('genra', type=str)
 		parser.add_argument('course', type=str)
 		parser.add_argument('school', type=str)
 		parser.add_argument('semester', type=str)
 
 	def handle(self, *args, **options):
-		self.genra = json.load(open(options['genra'], 'r'))
 		self.school = options['school']
 		self.semester = options['semester']
 		course = json.load(open(options['course'], 'r'))
@@ -78,8 +75,8 @@ class Command(BaseCommand):
 		self.CourseOfTime.create_index([("school", pymongo.HASHED)])
 
 	def forGenra(self, course, GenraTable):
-		if course['for_dept'] in self.genra:
-			GenraTable[self.genra[course['for_dept']]].setdefault(course['for_dept'], set()).add(course['grade'])
+		if course['category'] != '必修類' and course['category'] != '選修類':
+			GenraTable[course['category']].setdefault(course['for_dept'], set()).add(course['grade'])
 		else:
 			GenraTable['大學部'].setdefault(course['for_dept'], set()).add(course['grade'])
 
@@ -101,8 +98,8 @@ class Command(BaseCommand):
 			day = i['day']
 			for time in i['time']:
 				try:
-					if course['for_dept'] in self.genra:
-						self.timeTable[str(day)][str(time)][self.genra[course['for_dept']]].add(course['code'])
+					if course['category'] != '必修類' and course['category'] != '選修類':
+						self.timeTable[str(day)][str(time)][course['category']].add(course['code'])
 					else:
 						self.timeTable[str(day)][str(time)][course['for_dept']].add(course['code'])
 				except Exception as e:
