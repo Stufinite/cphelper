@@ -19,7 +19,7 @@ class Course(object):
 		if grade == None:
 			CourseDict = self.Cursor2Dict(self.db['CourseOfDept'].find({"school":self.school}, {'_id':False, 'CourseOfDept.{}'.format(dept):1}).limit(1))
 		else:
-			CourseDict = self.Cursor2Dict(self.db['CourseOfDept'].find({school:self.school}, {'_id':False, 'CourseOfDept.{}.optional.{}'.format(dept, grade):1, 'CourseOfDept.{}.obligatory.{}'.format(dept, grade):1}).limit(1))
+			CourseDict = self.Cursor2Dict(self.db['CourseOfDept'].find({'school':self.school}, {'_id':False, 'CourseOfDept.{}.optional.{}'.format(dept, grade):1, 'CourseOfDept.{}.obligatory.{}'.format(dept, grade):1}).limit(1))
 		return CourseDict['CourseOfDept'][dept]
 
 	def getByTime(self, day, time, deptArr):
