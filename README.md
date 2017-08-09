@@ -12,7 +12,7 @@ API使用方式（下面所寫的是api的URL pattern）<br>
   (Get Course code of Dept Name.)：<br>
 
   Grade參數用來指定年級，如果不加則是回傳所有年級的必選修：
-  - 全年級：`/cphelper/get/CourseOfDept/?dept=多媒&school=NUTC`
+  - 全年級：`/cphelper/get/CourseOfDept/?dept=多媒&school=NSYSU`
     - Result：
 
     ```
@@ -49,7 +49,7 @@ API使用方式（下面所寫的是api的URL pattern）<br>
     }
     ```
 
-  - 指定年級：`/cphelper/get/CourseOfDept/?dept=多媒&school=NUTC&grade=三１`
+  - 指定年級：`/cphelper/get/CourseOfDept/?dept=多媒&school=NSYSU&grade=三１`
     - result：
 
     ```
@@ -77,7 +77,7 @@ API使用方式（下面所寫的是api的URL pattern）<br>
 2. *`/cphelper/get/CourseOfTime/?day=<星期幾>&time=<第幾節課>&school=<學校名稱>&dept=<系所，可以是複數>`*  
 查詢該時段有什麼課可以上：
 
-  - 範例 (Example)：`cphelper/get/CourseOfTime/?day=1&time=5&school=NUTC&dept=通識類+多媒`  
+  - 範例 (Example)：`cphelper/get/CourseOfTime/?day=1&time=5&school=NSYSU&dept=通識類+多媒`  
   代表是要查詢通識類和多媒該時段的課程  
   - *`dept`* ：如果要使用複數的時候，請記得用 *`+`* 把參數隔開
   - result：
@@ -89,7 +89,7 @@ API使用方式（下面所寫的是api的URL pattern）<br>
 3. *`/cphelper/get/Genra/?school=<學校名稱>`*  
 該學校所有的系所和年級：
 
-  - 範例 (Example)：`/cphelper/get/Genra/?school=NUTC`  
+  - 範例 (Example)：`/cphelper/get/Genra/?school=NSYSU`  
   - result：
 
     ```
