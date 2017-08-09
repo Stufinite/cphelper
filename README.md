@@ -163,7 +163,7 @@ API使用方式（下面所寫的是api的URL pattern）<br>
 1. 插入mongodb以及django資料庫的範例指令：
     * 首先需要執行課程的爬蟲:[CampassCrawler](https://github.com/stufinite/campasscrawler)
     * `python manage.py buildCourse 學校genra.json 學校course.json 學校 第幾學年度`
-    * 以中山大學為範例：`python manage.py buildCourse ../NSYSUgenra.json ../NSYSU.json NSYSU 1061`
+    * 以中山大學為範例：`python manage.py buildCourse  NSYSU.json NSYSU 1061`
 2. Execute : `python manage.py runserver`.
 
 # test
