@@ -52,7 +52,7 @@ class Command(BaseCommand):
 			self.forTime(course)
 
 			if course['code'] not in uniqueCodeSet:
-				uniqueCodeSet.add(course['code'])				
+				uniqueCodeSet.add(course['code'])
 				CourseList.append(self.json2django(course))
 				self.BuildIndex(CourseSearchTable, course)
 
@@ -75,9 +75,7 @@ class Command(BaseCommand):
 		self.CourseOfTime.create_index([("school", pymongo.HASHED)])
 
 	def forGenra(self, course, GenraTable):
-		if course['category'] != '必修類' and course['category'] != '選修類':
-			GenraTable[course['category']].setdefault(course['for_dept'], set()).add(course['grade'])
-		else:
+		if course['category'] == '必修類' or course['category'] == '選修類':
 			GenraTable['大學部'].setdefault(course['for_dept'], set()).add(course['grade'])
 
 	def forDept(self, course, CourseOfDeptTable):
