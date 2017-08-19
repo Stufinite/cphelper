@@ -131,7 +131,8 @@ class Command(BaseCommand):
 				location=course['location'][0] if len(course['location']) else '',
 				obligatory=course['obligatory_tf'],
 				note=course['note'],
-				discipline=course['discipline']
+				discipline=course['discipline'],
+				category=course['category']
 			)
 		)
 
