@@ -75,7 +75,7 @@ class Command(BaseCommand):
 		self.CourseOfTime.create_index([("school", pymongo.HASHED)])
 
 	def forGenra(self, course, GenraTable):
-		if course['category'] == '必修類' or course['category'] == '選修類':
+		if course['category'] == '大學部':
 			GenraTable['大學部'].setdefault(course['for_dept'], set()).add(course['grade'])
 
 	def forDept(self, course, CourseOfDeptTable):
@@ -96,7 +96,7 @@ class Command(BaseCommand):
 			day = i['day']
 			for time in i['time']:
 				try:
-					if course['category'] != '必修類' and course['category'] != '選修類':
+					if course['category'] != '大學部':
 						self.timeTable[str(day)][str(time)][course['category']].add(course['code'])
 					else:
 						self.timeTable[str(day)][str(time)][course['for_dept']].add(course['code'])
